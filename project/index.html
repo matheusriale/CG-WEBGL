@@ -1,0 +1,127 @@
+<head>
+    <title>Trabalho 2 - CG</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.2/math.js"></script>
+    <script src="game/index.js"></script>
+
+
+    <script id="vertex-shader" type="notjs">
+        // attribute -> muda para cada vértice
+        attribute vec4 position;
+        attribute vec2 texCoord;
+        uniform mat4 transfproj;
+        //uniform mat4 transf;
+
+        varying vec2 v_texCoord;
+
+        attribute vec3 normal;
+        varying vec3 v_normal;
+
+        uniform vec3 lightpos;
+        varying vec3 pointToLight;
+
+        uniform vec3 campos;
+        varying vec3 pointToCam;
+
+        void main()
+        {   
+            gl_Position = transfproj*position; 
+            pointToLight = lightpos - position.xyz;
+            pointToCam = campos - gl_Position.xyz;
+
+            v_normal = (vec4(normal,1)).xyz;
+
+            v_texCoord = texCoord;
+            
+        }
+    </script>
+
+    <script id="frag-shader" type="notjs">
+        precision mediump float;
+
+        //texturas
+        uniform sampler2D tex;
+        varying vec2 v_texCoord;
+
+        //iluminação:
+        varying vec3 v_normal;
+        uniform vec3 lightDirection;
+        uniform vec3 lightColor;
+
+        //cores sólidas:
+        uniform vec4 color;
+        uniform bool isSolid;
+
+        varying vec3 pointToLight;
+        varying vec3 pointToCam;
+
+        void main()
+        {
+            vec3 pToLight = normalize(pointToLight);
+            vec3 pToCam = normalize(pointToCam);
+
+            vec3 halfVec = normalize(pToCam + pToLight);
+
+            vec3 v_normal_n = normalize(v_normal);
+            vec3 lightDirection_n = normalize(-lightDirection);
+
+            float lightd = dot(v_normal_n,lightDirection_n);
+            float lightp = dot(v_normal_n,pToLight);
+            float lighte = dot(v_normal_n,halfVec);
+
+            if (lightd<0.0) lightd = 0.0;
+            if (lightp<0.0) lightp = 0.0;
+            if (lighte<0.0) lighte = 0.0;
+
+            if(isSolid){ //Caso verdadeiro, objeto deve ser renderizado com cor sólida
+                gl_FragColor = color;
+            }else{
+                //Com luz de cor
+                //gl_FragColor = vec4(lightColor*light*texture2D(tex, v_texCoord).rgb, 1);
+                
+                // Modelo de reflexão de Phong:
+                // Ambiente:
+                //gl_FragColor = 0.6 * texture2D(tex, v_texCoord);
+                // Direcional:
+                //gl_FragColor += 0.5 * lightp * texture2D(tex, v_texCoord);
+                
+
+                vec3 texColor = texture2D(tex, v_texCoord).rgb;
+                gl_FragColor.rgb = 0.1*lightColor*texColor;
+                gl_FragColor.rgb += 0.3*lightColor*lightd*texColor;
+                gl_FragColor.rgb += 0.4*lightColor*lightp*texColor;
+                gl_FragColor.rgb += 0.4* lightColor*pow(lighte,20.0)*texColor;
+                gl_FragColor.a = texture2D(tex, v_texCoord).a;
+            }
+        }
+    </script>
+</head>
+
+
+<body onload="init()">
+    <ul>
+        <li>Caio de Freitas Oliveira - 501375</li>
+        <li>Matheus Ribeiro Alencar - 494711</li>
+    </ul>
+    <p>Desvie dos trens! (Utilize as teclas WASD)</p>
+    <p>Pontuação atual: <b id="scoreboard">0</b></p>
+    <p style="display: none;" id="game-over"> GAME OVER </p>
+    <canvas id="glcanvas1" width="500" height="500">
+
+</body>
+
+
+<script src="game/camera.js"></script>
+<script src="game/events.js"></script>
+<script src="game/utils.js"></script>
+<script src="game/webgl.js"></script>
+
+<script src="game/drawing/readObj.js"></script>
+<script src="game/drawing/shapes.js"></script>
+<script src="game/drawing/textures.js"></script>
+<script src="game/drawing/vertices.js"></script>
+
+<script src="game/elements/game.js"></script>
+<script src="game/elements/player.js"></script>
+<script src="game/elements/scenario.js"></script>
+<script src="game/elements/train.js"></script>
+<script src="game/elements/coin.js"></script>
