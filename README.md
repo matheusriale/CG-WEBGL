@@ -1,7 +1,7 @@
 # CG-WEBGL
 Final project for computer graphics classes. A game made in webgl
 
-##PT-BR
+## PT-BR
 
 # Trabalho 2 - Computação Gráfica
 
